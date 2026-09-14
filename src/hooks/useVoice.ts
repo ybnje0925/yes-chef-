@@ -18,7 +18,7 @@ type VoiceWindow = Window & {
   SpeechRecognition?: new () => Recognition;
   webkitSpeechRecognition?: new () => Recognition;
 };
-export function useVoice(onNext: () => void, active: boolean) {
+export function useVoice(onNext: () => void) {
   const [supported, setSupported] = useState(false),
     [listening, setListening] = useState(false),
     [hint, setHint] = useState("");
@@ -64,7 +64,9 @@ export function useVoice(onNext: () => void, active: boolean) {
     r.onend = () => {
       ref.current = null;
       setListening(false);
-      if (active && !stoppedByUser.current)
+      // Chrome은 침묵 뒤에도 인식을 종료할 수 있다. 사용자가 한 번 켠 세션은
+      // 다음 단계에서도 유지되도록 즉시 다시 시작한다.
+      if (!stoppedByUser.current)
         restartTimer.current = setTimeout(() => listen(), 250);
     };
     try {
@@ -75,15 +77,11 @@ export function useVoice(onNext: () => void, active: boolean) {
       setListening(false);
       setHint("음성을 시작하지 못했어요. 버튼을 사용해 주세요.");
     }
-  }, [active]);
+  }, []);
   const stop = useCallback(() => {
     stoppedByUser.current = true;
     if (restartTimer.current) clearTimeout(restartTimer.current);
     ref.current?.abort();
   }, []);
-  useEffect(() => {
-    if (active && supported) listen();
-    if (!active) stop();
-  }, [active, supported, listen, stop]);
   return { supported, listening, hint, listen, stop };
 }

@@ -1,8 +1,10 @@
 "use client";
 import { Mic } from "lucide-react";
-import { useVoice } from "@/hooks/useVoice";
-export default function VoiceButton({ onNext }: { onNext: () => void }) {
-  const voice = useVoice(onNext, true);
+import type { useVoice } from "@/hooks/useVoice";
+
+type Voice = ReturnType<typeof useVoice>;
+
+export default function VoiceButton({ voice }: { voice: Voice }) {
   return (
     <div className="voice">
       <button
@@ -13,8 +15,8 @@ export default function VoiceButton({ onNext }: { onNext: () => void }) {
         <Mic size={16} />
         {voice.supported
           ? voice.listening
-            ? "상시 듣는 중 · 잠시 끄기"
-            : "음성 다시 켜기"
+            ? "계속 듣는 중 · 잠시 끄기"
+            : "말로 대답하기"
           : "이 브라우저는 버튼으로 대답해 주세요"}
       </button>
       <p>

@@ -10,6 +10,9 @@ import {
 } from "@/lib/chef";
 import type { Recipe, Session } from "@/lib/types";
 
+const chefStepLine = (instruction: string, direction: string) =>
+  `${instruction} ${direction}`;
+
 export function useCookingSession() {
   const [session, setSession] = useState<Session | null>(null);
   const [now, setNow] = useState(0);
@@ -124,7 +127,14 @@ export function useCookingSession() {
       demo,
       pastaSeconds,
     });
-    setMessage(recipe.steps[0].chefStartMessage);
+    // 화면의 지시문을 셰프 대사 첫머리에 넣어, 매 스텝을 음성만으로도
+    // 이해할 수 있게 한다.
+    setMessage(
+      chefStepLine(
+        recipe.steps[0].instruction,
+        recipe.steps[0].chefStartMessage,
+      ),
+    );
   }
   function next(force = false) {
     const s = sessionRef.current;
@@ -186,8 +196,9 @@ export function useCookingSession() {
       timerNotified: false,
     });
     setNow(now);
+    const nextStep = recipe.steps[s.index + 1];
     setMessage(
-      `${randomMessage(step.successMessages)} ${recipe.steps[s.index + 1].chefStartMessage}`,
+      `${randomMessage(step.successMessages)} ${chefStepLine(nextStep.instruction, nextStep.chefStartMessage)}`,
     );
   }
   const pause = useCallback(() => {

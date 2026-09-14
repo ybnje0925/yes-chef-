@@ -25,6 +25,7 @@ import Brand from "./Brand";
 import VoiceButton from "./VoiceButton";
 import { recipes } from "@/data/recipes";
 import { useCookingSession } from "@/hooks/useCookingSession";
+import { useVoice } from "@/hooks/useVoice";
 import Dialog from "./Dialog";
 import { formatTime } from "@/lib/timer";
 import { emptyStats, evaluate, recordResult } from "@/lib/scoring";
@@ -50,6 +51,15 @@ export default function Kitchen() {
     [exitOpen, setExitOpen] = useState(false);
   const [notice, setNotice] = useState(""),
     [install, setInstall] = useState<InstallPrompt | null>(null);
+  // 음성 엔진은 화면이나 스텝이 바뀌어도 다시 만들지 않는다. 최초 클릭 뒤에는
+  // onNext ref만 현재 화면의 동작으로 바뀌므로 계속 듣는 상태가 유지된다.
+  const voice = useVoice(() => {
+    if (screen === "prep") beginCooking();
+    if (screen === "cooking") {
+      if (cook.earlyDialog) cook.apologize();
+      else cook.next();
+    }
+  });
   useEffect(() => {
     setStats(readStats());
     if ("serviceWorker" in navigator && process.env.NODE_ENV === "production")
@@ -97,6 +107,9 @@ export default function Kitchen() {
     const id = setTimeout(() => setNotice(""), 6000);
     return () => clearTimeout(id);
   }, [notice]);
+  useEffect(() => {
+    if (screen !== "prep" && screen !== "cooking") voice.stop();
+  }, [screen, voice.stop]);
   function choose(recipe: Recipe) {
     setSelected(recipe);
     setChecked([]);
@@ -443,7 +456,7 @@ export default function Kitchen() {
               <p className="button-note">
                 {checked.length} / {selected.ingredients.length} 재료 준비 완료
               </p>
-              <VoiceButton key={selected.id} onNext={beginCooking} />
+              <VoiceButton voice={voice} />
             </section>
           </div>
         </main>
@@ -562,12 +575,7 @@ export default function Kitchen() {
                   그래도 넘어가기 · 지시 불이행 +1
                 </button>
               )}
-            <VoiceButton
-              key={cook.session.index}
-              onNext={
-                cook.earlyDialog ? cook.apologize : () => cook.next()
-              }
-            />
+            <VoiceButton voice={voice} />
           </div>
         </main>
       )}
