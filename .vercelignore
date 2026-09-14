@@ -1,0 +1,6 @@
+artifacts/
+test-results/
+tests/
+.next/
+out/
+.vercel/
