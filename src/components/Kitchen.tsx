@@ -103,6 +103,16 @@ export default function Kitchen() {
     setPastaMinutes(8);
     setScreen("prep");
   }
+  function beginCooking() {
+    if (checked.length !== selected.ingredients.length) {
+      setNotice("재료를 모두 준비한 뒤 “예, 셰프”라고 말해.");
+      return;
+    }
+    cook.start(selected, demo, pastaMinutes * 60);
+    // 조리를 시작하면 셰프 음성 안내를 기본으로 켠다.
+    setSound(true);
+    setScreen("cooking");
+  }
   async function addToHome() {
     if (install) {
       await install.prompt();
@@ -426,18 +436,14 @@ export default function Kitchen() {
               <button
                 className="primary"
                 disabled={checked.length !== selected.ingredients.length}
-                onClick={() => {
-                  cook.start(selected, demo, pastaMinutes * 60);
-                  // 시작 버튼의 사용자 동작 안에서 음성 안내를 활성화한다.
-                  setSound(true);
-                  setScreen("cooking");
-                }}
+                onClick={beginCooking}
               >
                 다 준비했습니다, 셰프! <ArrowRight size={20} />
               </button>
               <p className="button-note">
                 {checked.length} / {selected.ingredients.length} 재료 준비 완료
               </p>
+              <VoiceButton key={selected.id} onNext={beginCooking} />
             </section>
           </div>
         </main>
@@ -556,7 +562,12 @@ export default function Kitchen() {
                   그래도 넘어가기 · 지시 불이행 +1
                 </button>
               )}
-            <VoiceButton key={cook.session.index} onNext={() => cook.next()} />
+            <VoiceButton
+              key={cook.session.index}
+              onNext={
+                cook.earlyDialog ? cook.apologize : () => cook.next()
+              }
+            />
           </div>
         </main>
       )}

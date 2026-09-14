@@ -151,8 +151,10 @@ export function useCookingSession() {
           scolded: s.counters.scolded + 1,
         },
       });
+      // “어딜 가” 모달은 언제나 강한 제지 멘트가 먼저 나오고,
+      // 그 뒤에 현재 조리 단계에 맞는 구체적인 지적을 붙인다.
       setMessage(
-        randomMessage([...step.earlyWarningMessages, ...brutalScoldMessages]),
+        `${randomMessage(brutalScoldMessages)} ${randomMessage(step.earlyWarningMessages)}`,
       );
       setEarlyDialog(true);
       navigator.vibrate?.(80);
